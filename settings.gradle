@@ -1,0 +1,3 @@
+include ':huaweilib'
+include ':app'
+rootProject.name = "SampleHuawei"
