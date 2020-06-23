@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
-public class CameraActivity extends MainActivity {
+public class CameraActivity extends HuaweiCameraActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

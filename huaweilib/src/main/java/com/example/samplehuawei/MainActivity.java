@@ -15,6 +15,7 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
@@ -32,6 +33,7 @@ import com.example.huaweilib.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
+import java.util.Arrays;
 
 public abstract class MainActivity extends AppCompatActivity {
     private TextureView textureView;
@@ -98,17 +100,18 @@ public abstract class MainActivity extends AppCompatActivity {
         @Override
         public void onOpened(@NonNull CameraDevice camera) {
             cameraDevice = camera;
-            createCameraPreview();
+            //createCameraPreview();
         }
 
         @Override
         public void onDisconnected(@NonNull CameraDevice camera) {
-
+            cameraDevice.close();
         }
 
         @Override
         public void onError(@NonNull CameraDevice camera, int error) {
-
+            cameraDevice.close();
+            cameraDevice = null;
         }
     };
 
@@ -141,6 +144,49 @@ public abstract class MainActivity extends AppCompatActivity {
 
         if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             cameraManager.openCamera(cameraId, stateCallback, null );
+        }
+    }
+
+    public void createCameraPreview() throws CameraAccessException {
+        SurfaceTexture texture = textureView.getSurfaceTexture();
+
+        texture.setDefaultBufferSize(imageDimensions.getWidth(), imageDimensions.getHeight());
+
+        Surface surface = new Surface(texture);
+
+        captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+
+        captureRequestBuilder.addTarget(surface);
+
+        cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
+            @Override
+            public void onConfigured(CameraCaptureSession session) {
+                    if(cameraDevice == null) {
+                        return;
+                    }
+
+                    cameraCaptureSession = session;
+                    updatePreview();
+            }
+
+            @Override
+            public void onConfigureFailed(CameraCaptureSession session) {
+
+            }
+        }, null);
+    }
+
+    public void updatePreview() {
+        if(cameraDevice == null) {
+            return;
+        }
+
+        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+
+        try {
+            cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, handler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
         }
     }
 
