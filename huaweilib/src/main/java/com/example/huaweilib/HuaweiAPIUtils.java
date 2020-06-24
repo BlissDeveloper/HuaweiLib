@@ -1,10 +1,15 @@
 package com.example.huaweilib;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import com.example.huaweilib.api.HuaweiAPI;
+import com.example.huaweilib.callbacks.OnImageMatched;
+import com.example.huaweilib.callbacks.OnImageStored;
+import com.example.huaweilib.responses.DetectResponse;
+import com.example.huaweilib.responses.StoreResponse;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -31,6 +36,14 @@ public class HuaweiAPIUtils {
     private Gson gson;
     private Retrofit retrofit;
     private HuaweiAPI huaweiAPI;
+
+    private double passingScore = 0.85;
+
+    /*
+    CALLBACKS
+     */
+    private OnImageMatched onImageMatched;
+    private OnImageStored onImageStored;
 
     public HuaweiAPIUtils(Context context) {
         this.context = context;
@@ -75,23 +88,79 @@ public class HuaweiAPIUtils {
 
         MultipartBody.Part mFile = MultipartBody.Part.createFormData("file", "nani", imageFile);
 
-        Call<String> storeImg = huaweiAPI.storeImage(collectionId, faceName, mFile);
+        Call<StoreResponse> storeImg = huaweiAPI.storeImage(collectionId, faceName, mFile);
 
-        storeImg.enqueue(new Callback<String>() {
+        storeImg.enqueue(new Callback<StoreResponse>() {
             @Override
-            public void onResponse(Call<String> call, Response<String> response) {
+            public void onResponse(Call<StoreResponse> call, Response<StoreResponse> response) {
+                String message = "";
                 if (response.isSuccessful()) {
-                    Log.d(HuaweiConstants.HUAWEI_TAG, response.body());
+                    String status = response.body().getStatus().toUpperCase();
+                    if (status.equals(HuaweiConstants.SUCCESS)) {
+                        onImageStored.onSuccess(response.body());
+                    } else {
+                        message = "Error code: " + response.code();
+                        onImageStored.onError(message);
+                    }
                 } else {
-                    Log.e(HuaweiConstants.HUAWEI_TAG, "Error code: " + response.code());
+                    message = "Error code: " + response.code();
+                    onImageStored.onError(message);
                 }
             }
 
             @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                Log.e(HuaweiConstants.HUAWEI_TAG, t.getMessage());
+            public void onFailure(Call<StoreResponse> call, Throwable t) {
+                String message = t.getMessage();
+                onImageStored.onError(message);
             }
         });
 
+    }
+
+    public void matchImage(File file) {
+        RequestBody collectionId = RequestBody.create(okhttp3.MultipartBody.FORM, HuaweiConstants.COLLECTION_ID);
+        RequestBody imageFile = RequestBody.create(file, MediaType.parse("image/*"));
+        MultipartBody.Part mFile = MultipartBody.Part.createFormData("file", "nani", imageFile);
+
+        Call<DetectResponse> matchImage = huaweiAPI.matchImage(mFile, collectionId);
+
+        matchImage.enqueue(new Callback<DetectResponse>() {
+            @Override
+            public void onResponse(Call<DetectResponse> call, Response<DetectResponse> response) {
+                String message = "";
+                if (response.isSuccessful()) {
+                    String status = response.body().getStatus();
+                    if (status.equals(HuaweiConstants.SUCCESS)) {
+                        double score = Double.parseDouble(response.body().getSimilarity());
+                        if (score > passingScore) {
+                            onImageMatched.onSuccess(response.body());
+                        } else {
+                            onImageMatched.onMismatch(response.body());
+                        }
+                    } else {
+                        message = "Error code: " + response.code();
+                        onImageMatched.onError(message);
+                    }
+                } else {
+                    message = "Error code: " + response.code();
+                    onImageMatched.onError(message);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DetectResponse> call, Throwable t) {
+                String message = t.getMessage();
+                onImageMatched.onError(message);
+            }
+        });
+
+    }
+
+    public void setOnImageMatched(OnImageMatched onImageMatched) {
+        this.onImageMatched = onImageMatched;
+    }
+
+    public void setOnImageStored(OnImageStored onImageStored) {
+        this.onImageStored = onImageStored;
     }
 }
