@@ -2,6 +2,7 @@ package com.example.samplehuawei;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.util.Log;
 import android.view.Surface;
@@ -32,6 +33,11 @@ public class HuaweiCamPreview extends SurfaceView implements SurfaceHolder.Callb
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         try {
+            Camera.Parameters parameters = mCamera.getParameters();
+            parameters.setPictureFormat(PixelFormat.JPEG);
+            parameters.setJpegQuality(100);
+           // parameters.setPictureSize(2048, 1232);
+            mCamera.setParameters(parameters);
             mCamera.setPreviewDisplay(holder);
             setCameraDisplayOrientation(1, mCamera);
             mCamera.startPreview();

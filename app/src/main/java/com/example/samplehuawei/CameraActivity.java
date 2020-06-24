@@ -6,24 +6,37 @@ import android.content.Intent;
 import android.media.Image;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.util.Log;
 
+import com.example.huaweilib.HuaweiAPIUtils;
+import com.example.huaweilib.HuaweiConstants;
 import com.example.huaweilib.ImageData;
+import com.example.huaweilib.api.HuaweiAPI;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.Serializable;
 
 public class CameraActivity extends HuaweiCameraActivity {
+    private HuaweiAPIUtils huaweiAPIUtils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        huaweiAPIUtils = new HuaweiAPIUtils(this);
     }
 
     @Override
     public void onImageTaken(byte[] data) {
-        ImageData imageData = ImageData.getInstance();
-        imageData.setImageData(data);
+        try {
+            File tempFile = File.createTempFile("avery-martin", "jpg", null);
+            FileOutputStream fos = new FileOutputStream(tempFile);
+            fos.write(data);
 
-        startActivity(new Intent(this, DisplayImageActivity.class));
+            huaweiAPIUtils.storeImage(tempFile);
+        } catch (Exception e) {
+            Log.e(HuaweiConstants.HUAWEI_TAG, e.getMessage());
+        }
     }
 }

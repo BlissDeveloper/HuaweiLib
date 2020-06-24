@@ -20,6 +20,22 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "version"
+    productFlavors {
+        qa {
+            dimension "version"
+            applicationId "com.example.samplehuawei.qa"
+        }
+        dev {
+            dimension "version"
+            applicationId "com.example.samplehuawei.dev"
+        }
+        prod {
+            dimension "version"
+            applicationId "com.example.samplehuawei"
+        }
+    }
 }
 
 dependencies {
