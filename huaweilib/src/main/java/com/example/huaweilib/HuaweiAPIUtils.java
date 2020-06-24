@@ -42,13 +42,16 @@ public class HuaweiAPIUtils {
                 .create();
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+
         OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(logging)
                 .connectTimeout(15, TimeUnit.SECONDS) // connect timeout
                 .writeTimeout(15, TimeUnit.SECONDS) // write timeout
                 .readTimeout(15, TimeUnit.SECONDS) // read timeout
                 .build();
+
 
         retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -66,13 +69,13 @@ public class HuaweiAPIUtils {
     }
 
     public void storeImage(File file) {
-        RequestBody collectionId = RequestBody.create(MediaType.parse("multipart/form-data"), HuaweiConstants.COLLECTION_ID);
-        final RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
-        RequestBody requestName = RequestBody.create(MediaType.parse("multipart/form-data"), file.getName());
+        RequestBody collectionId = RequestBody.create(okhttp3.MultipartBody.FORM, HuaweiConstants.COLLECTION_ID);
+        RequestBody faceName = RequestBody.create(okhttp3.MultipartBody.FORM, "sample-name-avery");
+        RequestBody imageFile = RequestBody.create(file, MediaType.parse("image/*"));
 
-        MultipartBody.Part requestImageFile = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+        MultipartBody.Part mFile = MultipartBody.Part.createFormData("file", "nani", imageFile);
 
-        Call<String> storeImg = huaweiAPI.storeImage(requestImageFile, collectionId, requestName);
+        Call<String> storeImg = huaweiAPI.storeImage(collectionId, faceName, mFile);
 
         storeImg.enqueue(new Callback<String>() {
             @Override

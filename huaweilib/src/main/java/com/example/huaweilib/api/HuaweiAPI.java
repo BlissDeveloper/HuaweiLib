@@ -11,7 +11,7 @@ public interface HuaweiAPI {
     @Multipart
     @POST("store/")
     Call<String> storeImage(
-            @Part MultipartBody.Part file,
-            @Part("collectionid") RequestBody collectionId,
-            @Part("facename") RequestBody faceName);
+            @Part("collectionid") RequestBody collectionid,
+            @Part("facename") RequestBody facename,
+            @Part MultipartBody.Part file);
 }
