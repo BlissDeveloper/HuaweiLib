@@ -85,21 +85,7 @@ public abstract class HuaweiCameraActivity extends AppCompatActivity {
         final Camera.PictureCallback mPicture = new Camera.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
-                //File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-                if (pictureFile == null) {
-                    Log.d(HuaweiConstants.HUAWEI_TAG, "Error creating media file, check storage permissions");
-                    return;
-                }
-
-                try {
-                    FileOutputStream fos = new FileOutputStream(pictureFile);
-                    fos.write(data);
-                    fos.close();
-                } catch (FileNotFoundException e) {
-                    Log.d(HuaweiConstants.HUAWEI_TAG, "File not found: " + e.getMessage());
-                } catch (IOException e) {
-                    Log.d(HuaweiConstants.HUAWEI_TAG, "Error accessing file: " + e.getMessage());
-                }
+                onImageTaken(data);
             }
         };
 
@@ -114,10 +100,7 @@ public abstract class HuaweiCameraActivity extends AppCompatActivity {
         });
     }
 
-    public File getOutputMediaFile() {
-        String state = Environment
-    }
-
+    public abstract void onImageTaken(byte[] data);
 
     public Camera getCameraInstance() {
         Camera camera = null;

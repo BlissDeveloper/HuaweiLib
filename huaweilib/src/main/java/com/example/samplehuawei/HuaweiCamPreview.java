@@ -49,7 +49,6 @@ public class HuaweiCamPreview extends SurfaceView implements SurfaceHolder.Callb
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         mCamera.stopPreview();
-        mCamera.release();
     }
 
 
